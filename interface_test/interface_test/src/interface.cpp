@@ -6,6 +6,42 @@
 #include <string>
 
 static PyObject *InterfaceError;
+struct SInput input;
+struct SOutput output = { TYPE_NONE,0.,0.,0.,0.};
+
+static PyObject *
+run_function(PyObject *self, PyObject *args, PyObject *keywds)
+{
+
+  static char *kwlist[] = { "type","avalue", "bvalue", "cvalue", "dvalue", NULL };
+
+  if (PyArg_ParseTupleAndKeywords(args, keywds, "i|dddd", kwlist
+    , &(input.type)
+    , &(input.values[IAVALUE])
+    , &(input.values[IBVALUE])
+    , &(input.values[IBVALUE])
+    , &(input.values[IBVALUE])))
+  {
+    PyObject *ret;
+
+    if (input.type == TYPE_INIT) output.type = TYPE_FIRST;
+    else if(input.type == TYPE_FIRST) output.type = TYPE_RUN;
+    else                              output.type = TYPE_NONE;
+
+    output.avalue = input.values[IAVALUE];
+    output.bvalue = input.values[IBVALUE];
+    output.cvalue = input.values[ICVALUE];
+    output.dvalue = input.values[IDVALUE];
+
+    /* Build the output tuple */
+    ret = Py_BuildValue("idddd", input.type, output.bvalue, output.cvalue, output.dvalue);
+    return ret;
+
+  }
+
+  return NULL;
+
+}
 
 static PyObject *
 interface_system(PyObject *self, PyObject *args)
@@ -102,10 +138,13 @@ PyMethodDef InterfaceMethods[] =
 {
 
 
-  { "setgetval",  interface_values, METH_VARARGS, "Execute 3 doubles, get 2 doubles." },
-  { "getstr",     interface_str,    METH_VARARGS, "Execute a string." },
-  { "getdict",    interface_dict,   METH_VARARGS, "Execute a dict." },
-  { "system",     interface_system, METH_VARARGS, "Execute a shell command." },
+  { "setgetval",    interface_values, METH_VARARGS, "Execute 3 doubles, get 2 doubles." },
+  { "getstr",       interface_str,    METH_VARARGS, "Execute a string." },
+  { "getdict",      interface_dict,   METH_VARARGS, "Execute a dict." },
+  { "system",       interface_system, METH_VARARGS, "Execute a shell command." },
+
+  { "run_function", (PyCFunction)(void(*)(void))run_function, METH_VARARGS | METH_KEYWORDS, "run function" },
+
   { NULL, NULL, 0, NULL }        /* Sentinel */
 };
 
